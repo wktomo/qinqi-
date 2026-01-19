@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>亲戚称呼计算器 - 再也不怕叫错人</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            max-width: 420px;
+            width: 100%;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .display-path {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px 15px;
+            min-height: 50px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .display-path.active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        .display-result {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            color: #333;
+            transition: all 0.3s;
+        }
+
+        .result-text {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffb005;
+            animation: scaleIn 0.3s ease;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0.5; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .result-hint {
+            font-size: 11px;
+            color: #999;
+            margin-top: 6px;
+            min-height: 16px;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .sex-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sex-toggle span {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .sex-btn {
+            padding: 7px 15px;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .sex-btn:active {
+            transform: scale(0.95);
+        }
+
+        .sex-btn.male {
+            background: linear-gradient(135deg, #4dabf7 0%, #339af0 100%);
+            color: white;
+        }
+
+        .sex-btn.female {
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff5286 100%);
+            color: white;
+        }
+        .reverse-btn {
+            padding: 7px 15px;
+            background: #e7f5ff;
+            color: #1971c2;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .reverse-btn:hover {
+            background: #d0ebff;
+            transform: translateY(-1px);
+        }
+        .reverse-btn:active {
+            transform: translateY(0);
+        }
+        .actions {
+            padding: 10px 15px;
+            background: transparent;
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: white;
+        }
+        .back-btn {
+            background: linear-gradient(145deg, #ffb066, #ff922b);
+            box-shadow: 0 4px 0 #e88625, 0 8px 15px rgba(255, 146, 43, 0.3);
+        }
+        
+        .back-btn:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #e88625, inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .back-btn:disabled {
+            background: #e9ecef;
+            color: #adb5bd;
+            box-shadow: none;
+            transform: none;
+            cursor: not-allowed;
+        }
+        .clear-btn {
+            background: linear-gradient(145deg, #c52094, #fa5252);
+            box-shadow: 0 4px 0 #c92a2a, 0 8px 15px rgba(240, 62, 62, 0.3);
+        }
+
+        .clear-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #c92a2a, inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .keypad {
+            padding: 20px 15px 15px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .key {
+            aspect-ratio: 1.1; /* 稍微扁一点，视觉更稳 */
+            border: none;
+            background: linear-gradient(145deg, #ff8e8e, #ff6b6b);
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #e04f4f, 0 12px 20px rgba(255, 107, 107, 0.35);
+            transition: all 0.1s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            -webkit-user-select: none; 
+            user-select: none;
+        }
+
+        .key::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .key:active::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .key:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 0 #e04f4f, 0 15px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .key:active {
+            transform: translateY(5px); /* 向下移动，抵消阴影高度 */
+            box-shadow: 0 0 0 #e04f4f, inset 0 3px 5px rgba(0,0,0,0.1); /* 阴影消失+内阴影 */
+        }
+
+        /* 按钮上的小字标签 */
+        .key-label {
+            font-size: 10px;
+            margin-top: 4px;
+            opacity: 0.85;
+            font-weight: 400;
+        }
+
+        .footer {
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #adb5bd;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #868e96;
+        }
+
+        .stat-number {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            max-width: 350px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+
+        @media (max-width: 480px) {
+            .calculator {
+                border-radius: 20px;
+            }
+
+            .result-text {
+                font-size: 32px;
+            }
+
+            .key {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="header">
+            <h1><span>阿星*</span>亲戚称呼计算器-V1</h1>
+            <div class="display-path" id="pathDisplay">请点击下方按钮选择关系</div>
+            <div class="display-result">
+                <div class="result-text" id="resultDisplay">我</div>
+                <div class="result-hint" id="hintDisplay">点击下方按钮开始计算</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="sex-toggle">
+                <span>性别（点击切换）</span>
+                <button class="sex-btn male" id="sexBtn" onclick="toggleSex()">♂ 男生</button>
+            </div>
+            <button class="reverse-btn" onclick="reverseQuery()">
+                <span>🔄</span>
+                <span>互查</span>
+            </button>
+        </div>
+
+        <div class="actions">
+            <button class="action-btn back-btn" id="backBtn" onclick="handleBack()" disabled>
+                <span>↶</span>
+                <span>回退</span>
+            </button>
+            <button class="action-btn clear-btn" onclick="handleClear()">
+                <span>✕</span>
+                <span>清空</span>
+            </button>
+        </div>
+
+        <div class="keypad">
+            <button class="key" onclick="addRelation('f')">父<span class="key-label">爸爸</span></button>
+            <button class="key" onclick="addRelation('m')">母<span class="key-label">妈妈</span></button>
+            <button class="key" onclick="addRelation('ob')">兄<span class="key-label">哥哥</span></button>
+            <button class="key" onclick="addRelation('lb')">弟<span class="key-label">弟弟</span></button>
+            <button class="key" onclick="addRelation('os')">姐<span class="key-label">姐姐</span></button>
+            <button class="key" onclick="addRelation('ls')">妹<span class="key-label">妹妹</span></button>
+            <button class="key" onclick="addRelation('h')">夫<span class="key-label">老公</span></button>
+            <button class="key" onclick="addRelation('w')">妻<span class="key-label">老婆</span></button>
+            <button class="key" onclick="addRelation('s')">子<span class="key-label">儿子</span></button>
+            <button class="key" onclick="addRelation('d')">女<span class="key-label">女儿</span></button>
+        </div>
+
+        <div class="footer">
+            <div class="stats">
+                <div class="stat-item">
+                    <span>已选关系:</span>
+                    <span class="stat-number" id="pathCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>关系代数:</span>
+                    <span class="stat-number" id="generationCount">0</span>
+                </div>
+            </div>
+            <div>春节聚会必备神器 · 再也不怕叫错人</div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">提示</div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-primary" onclick="closeModal()">我知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let relationPath = [];
+        let mySex = 1;
+        // 扩容版数据库
+        const relationshipDB = {
+            // ====================
+            // 第0代：核心
+            // ====================
+            '': '我',
+            'h': '老公', 
+            'w': '老婆',
+            'f': '爸爸', 
+            'm': '妈妈', 
+            'ob': '哥哥', 
+            'lb': '弟弟', 
+            'os': '姐姐', 
+            'ls': '妹妹', 
+            's': '儿子', 
+            'd': '女儿',
+
+            // ====================
+            // 第1代上：祖辈 (Grandparents)
+            // ====================
+            // 爸爸那边
+            'f,f': '爷爷', 
+            'f,m': '奶奶', 
+            'f,ob': '伯父', 
+            'f,lb': '叔叔', 
+            'f,os': '姑妈', 
+            'f,ls': '姑姑',
+            // 妈妈那边
+            'm,f': '姥爷', 
+            'm,m': '姥姥', 
+            'm,ob': '大舅', 
+            'm,lb': '舅舅', 
+            'm,os': '大姨', 
+            'm,ls': '小姨',
+
+            // ====================
+            // 第1代下：孙辈 (Grandchildren)
+            // ====================
+            's,s': '孙子', 
+            's,d': '孙女', 
+            'd,s': '外孙', 
+            'd,d': '外孙女',
+
+            // ====================
+            // 第2代上：曾祖辈 (Great-Grandparents)
+            // ====================
+            'f,f,f': '曾祖父', 
+            'f,f,m': '曾祖母',
+            'f,m,f': '曾外祖父', 
+            'f,m,m': '曾外祖母',
+            'm,f,f': '外曾祖父', 
+            'm,f,m': '外曾祖母',
+            'm,m,f': '外曾外祖父', 
+            'm,m,m': '外曾外祖母',
+
+            // ====================
+            // 第2代上：祖辈旁系 (Grand Uncles/Aunts)
+            // ====================
+            // 爷爷的兄弟姐妹
+            'f,f,ob': '伯祖父 (大爷爷)', 
+            'f,f,lb': '叔祖父 (二爷爷)',
+            'f,f,os': '姑祖母 (姑奶奶)', 
+            'f,f,ls': '姑祖母 (姑奶奶)',
+            // 奶奶的兄弟姐妹
+            'f,m,ob': '舅祖父 (舅爷)', 
+            'f,m,lb': '舅祖父 (舅爷)',
+            'f,m,os': '姨祖母 (姨奶)', 
+            'f,m,ls': '姨祖母 (姨奶)',
+            // 姥爷的兄弟姐妹
+            'm,f,ob': '伯外祖父 (大姥爷)', 
+            'm,f,lb': '叔外祖父 (二姥爷)',
+            'm,f,os': '姑外祖母 (姑姥姥)', 
+            'm,f,ls': '姑外祖母 (姑姥姥)',
+            // 姥姥的兄弟姐妹
+            'm,m,ob': '舅外祖父 (舅姥爷)', 
+            'm,m,lb': '舅外祖父 (舅姥爷)',
+            'm,m,os': '姨外祖母 (姨姥姥)', 
+            'm,m,ls': '姨外祖母 (姨姥姥)',
+
+            // ====================
+            // 姻亲关系：长辈的配偶
+            // ====================
+            'f,ob,w': '伯母', 
+            'f,lb,w': '婶婶',
+            'f,os,h': '姑父', 
+            'f,ls,h': '姑父',
+            'm,ob,w': '舅妈', 
+            'm,lb,w': '舅妈',
+            'm,os,h': '姨父', 
+            'm,ls,h': '姨父',
+
+            // ====================
+            // 姻亲关系：平辈的配偶
+            // ====================
+            // 自己的配偶家
+            'h,f': '公公', 
+            'h,m': '婆婆',
+            'w,f': '岳父', 
+            'w,m': '岳母',
+            
+            // 兄弟姐妹的配偶
+            'ob,w': '嫂子', 
+            'lb,w': '弟妹',
+            'os,h': '姐夫', 
+            'ls,h': '妹夫',
+
+            // 配偶的兄弟姐妹
+            'h,ob': '大伯子', 
+            'h,lb': '小叔子', 
+            'h,os': '大姑姐', 
+            'h,ls': '小姑子',
+            'w,ob': '大舅哥', 
+            'w,lb': '小舅子', 
+            'w,os': '大姨姐', 
+            'w,ls': '小姨子',
+
+            // 配偶的兄弟姐妹的配偶 (妯娌/连襟)
+            'h,ob,w': '嫂子 (妯娌)', 
+            'h,lb,w': '弟妹 (妯娌)',
+            'w,os,h': '姐夫 (连襟)', 
+            'w,ls,h': '妹夫 (连襟)',
+
+            // ====================
+            // 堂表亲 (Cousins)
+            // ====================
+            // 1. 堂亲 (父亲的兄弟的孩子)
+            'f,ob,s': '堂哥/弟', 'f,ob,d': '堂姐/妹',
+            'f,lb,s': '堂哥/弟', 'f,lb,d': '堂姐/妹',
+            
+            // 2. 表亲 (父亲的姐妹的孩子 - 姑表)
+            'f,os,s': '表哥/弟', 'f,os,d': '表姐/妹',
+            'f,ls,s': '表哥/弟', 'f,ls,d': '表姐/妹',
+            
+            // 3. 表亲 (母亲的兄弟的孩子 - 舅表)
+            'm,ob,s': '表哥/弟', 'm,ob,d': '表姐/妹',
+            'm,lb,s': '表哥/弟', 'm,lb,d': '表姐/妹',
+            
+            // 4. 表亲 (母亲的姐妹的孩子 - 姨表)
+            'm,os,s': '表哥/弟', 'm,os,d': '表姐/妹',
+            'm,ls,s': '表哥/弟', 'm,ls,d': '表姐/妹',
+
+            // ====================
+            // 晚辈 (Nephews/Nieces)
+            // ====================
+            'ob,s': '侄子', 'ob,d': '侄女',
+            'lb,s': '侄子', 'lb,d': '侄女',
+            'os,s': '外甥', 'os,d': '外甥女',
+            'ls,s': '外甥', 'ls,d': '外甥女',
+            
+            // 晚辈的配偶
+            's,w': '儿媳', 
+            'd,h': '女婿',
+            'ob,s,w': '侄媳', 
+            'ob,d,h': '侄女婿',
+            'os,s,w': '外甥媳', 
+            'os,d,h': '外甥女婿',
+
+            // ====================
+            // 曾孙/玄孙 (Great-Grandchildren)
+            // ====================
+            's,s,s': '曾孙', 
+            's,s,d': '曾孙女',
+            's,d,s': '外曾孙', 
+            's,d,d': '外曾孙女',
+            'd,s,s': '外曾孙', 
+            'd,s,d': '外曾孙女',
+            'd,d,s': '外曾外孙', 
+            'd,d,d': '外曾外孙女',
+            
+            // 玄孙 (第4代下)
+            's,s,s,s': '玄孙', 
+            's,s,s,d': '玄孙女',
+
+            // ====================
+            // 高祖/天祖 (Ancestors 4-5代)
+            // ====================
+            'f,f,f,f': '高祖父',
+            'f,f,f,m': '高祖母',
+            'f,f,f,f,f': '天祖父',
+            
+            // ====================
+            // 亲家关系
+            // ====================
+            's,w,f': '亲家公', 's,w,m': '亲家母',
+            'd,h,f': '亲家公', 'd,h,m': '亲家母'
+        };
+        const relationNames = {
+            'f': '爸爸', 'm': '妈妈', 'h': '老公', 'w': '老婆',
+            's': '儿子', 'd': '女儿', 'ob': '哥哥', 'lb': '弟弟',
+            'os': '姐姐', 'ls': '妹妹'
+        };
+        function addRelation(relation) {
+            relationPath.push(relation);
+            updateDisplay();
+            document.getElementById('pathDisplay').classList.add('active');
+            setTimeout(() => document.getElementById('pathDisplay').classList.remove('active'), 300);
+        }
+        function handleBack() {
+            if (relationPath.length > 0) {
+                relationPath.pop();
+                updateDisplay();
+            }
+        }
+        function handleClear() {
+            if (relationPath.length === 0) {
+                showModal('提示', '当前没有任何关系，无需清空哦 😊');
+                return;
+            }
+            relationPath = [];
+            updateDisplay();
+        }
+        function simplifyChain(path, sex) {
+            let currentPath = [...path];
+            let hasChanged = true;
+            while (hasChanged) {
+                hasChanged = false;
+                if (currentPath.length < 2) break;
+
+                for (let i = 0; i < currentPath.length - 1; i++) {
+                    const pair = currentPath[i] + ',' + currentPath[i+1];
+                    let reduced = null; // null 表示这对关系没有化简逻辑
+
+                    // --- 1. 夫妻回环 (绝对是“我”) ---
+                    if (pair === 'h,w') { // 老公的老婆
+                        reduced = (sex === 0) ? [] : ['w']; // 如果我是女的，那就是“我”(空数组)；如果我是男的，那就是老婆(实际上男的也没老公)
+                    } else if (pair === 'w,h') { // 老婆的老公
+                        reduced = (sex === 1) ? [] : ['h']; // 如果我是男的，那就是“我”
+                    }
+                    else if (pair === 'os,ls') { // 姐姐的妹妹
+                        reduced = (sex === 0) ? [] : ['ls']; // 女变我，男变妹妹
+                    } 
+                    else if (pair === 'ls,os') { // 妹妹的姐姐
+                        reduced = (sex === 0) ? [] : ['os']; // 女变我，男变姐姐
+                    }
+                    else if (pair === 'ob,lb') { // 哥哥的弟弟
+                        reduced = (sex === 1) ? [] : ['lb']; // 男变我，女变弟弟
+                    }
+                    else if (pair === 'lb,ob') { // 弟弟的哥哥
+                        reduced = (sex === 1) ? [] : ['ob']; // 男变我，女变哥哥
+                    }
+                    else if (pair === 'f,s' || pair === 'm,s') {
+                        reduced = (sex === 1) ? [] : ['ob']; // 这里暂定为哥哥，也可能是弟弟
+                    }
+                    else if (pair === 'f,d' || pair === 'm,d') {
+                        reduced = (sex === 0) ? [] : ['os']; // 这里暂定为姐姐，也可能是妹妹
+                    }
+                    if (reduced !== null) {
+                        // 删除这两个旧节点，插入化简后的节点（如果是[]就是删掉了，变成了"我"）
+                        currentPath.splice(i, 2, ...reduced);
+                        hasChanged = true;
+                        break; // 重新开始循环，因为数组长度变了
+                    }
+                }
+            }
+            return currentPath;
+        }
+function toggleSex() {
+            mySex = mySex === 1 ? 0 : 1;
+            const btn = document.getElementById('sexBtn');
+            btn.className = mySex === 1 ? 'sex-btn male' : 'sex-btn female';
+            btn.innerHTML = mySex === 1 ? '♂ 男生' : '♀ 女生';
+            const keys = document.querySelectorAll('.key');
+            keys.forEach(key => {
+                const text = key.innerText.split('\n')[0]; // 获取按钮大字
+                if (text.includes('夫')) {
+                    key.style.opacity = mySex === 1 ? '0.5' : '1';
+                    key.style.pointerEvents = mySex === 1 ? 'none' : 'auto';
+                }
+                if (text.includes('妻')) {
+                    key.style.opacity = mySex === 0 ? '0.5' : '1';
+                    key.style.pointerEvents = mySex === 0 ? 'none' : 'auto';
+                }
+            });
+            if(relationPath.length > 0) handleClear();
+        }
+        setTimeout(toggleSex, 0); // 触发一次状态更新，注意这会重置mySex，你可能需要手动调整逻辑，或者直接在加载完后手动设置样式。
+        function reverseQuery() {
+            if (relationPath.length === 0) {
+                showModal('温馨提示', '请先选择一个亲戚关系，然后再使用互查功能查看对方如何称呼你哦！');
+                return;
+            }   
+            const currentResult = calculateRelationship();
+            const reverseRelation = getReverseRelationship();
+            showModal(
+                '互查结果', 
+                `<div style="margin-bottom: 15px;">
+                    <div style="color: #999; font-size: 12px; margin-bottom: 5px;">你称呼对方：</div>
+                    <div style="color: #ff6b6b; font-size: 20px; font-weight: bold;">${currentResult}</div>
+                </div>
+                <div>
+                    <div style="color: #999; font-size: 12px; margin-bottom: 5px;">对方称呼你：</div>
+                    <div style="color: #4dabf7; font-size: 20px; font-weight: bold;">${reverseRelation}</div>
+                </div>`
+            );
+        }
+        function getReverseRelationship() {
+            if (relationPath.length === 0) return '我';
+            const reverseMap = {
+                'f': 's', 'm': 's', 's': 'f', 'd': 'f',
+                'ob': 'lb', 'lb': 'ob', 'os': 'ls', 'ls': 'os',
+                'h': 'w', 'w': 'h'
+            };
+            const reversed = [];
+            for (let i = relationPath.length - 1; i >= 0; i--) {
+                const rel = relationPath[i];
+                if (reverseMap[rel]) {
+                    reversed.push(reverseMap[rel]);
+                }
+            }
+            if (reversed.length > 0) {
+                const key = reversed.join(',');
+                return relationshipDB[key] || '对应称呼';
+            }
+            return '对应称呼';
+        }
+        function showModal(title, body) {
+            document.getElementById('modalTitle').innerHTML = title;
+            document.getElementById('modalBody').innerHTML = body;
+            document.getElementById('modal').classList.add('show');
+        }
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        function calculateRelationship() {
+            const simplifiedPath = simplifyChain(relationPath, mySex);
+            if (simplifiedPath.length === 0) return '我';
+            const fullKey = simplifiedPath.join(',');
+            if (relationshipDB[fullKey]) return relationshipDB[fullKey];
+            const isAllFather = simplifiedPath.every(r => r === 'f');
+            if (isAllFather) {
+                if (simplifiedPath.length === 4) return '高祖父';
+                if (simplifiedPath.length === 5) return '天祖父';
+                if (simplifiedPath.length === 6) return '烈祖父';
+                if (simplifiedPath.length >= 7) return '太祖父';
+            }
+            for (let i = simplifiedPath.length - 1; i > 0; i--) {
+                const subPath = simplifiedPath.slice(0, i);
+                const subKey = subPath.join(',');
+                
+                if (relationshipDB[subKey]) {
+                    const knownName = relationshipDB[subKey];
+                    // 把剩下的路径直接翻译成中文
+                    const remainingPath = simplifiedPath.slice(i);
+                    const remainingName = remainingPath.map(code => relationNames[code]).join('的');
+                    
+                    return knownName + '的' + remainingName;
+                }
+            }
+            return simplifiedPath.map(code => relationNames[code]).join('的');
+        }
+        function calculateGeneration() {
+            let generation = 0;
+            for (let rel of relationPath) {
+                if (rel === 'f' || rel === 'm') generation++;
+                else if (rel === 's' || rel === 'd') generation--;
+            }
+            return Math.abs(generation);
+        }
+        (function() {
+                document.oncontextmenu = function() { return false; };
+                document.onkeydown = function(e) {
+                    var k = e.keyCode || e.which;
+                    var ctrl = e.ctrlKey || e.metaKey; 
+                    var shift = e.shiftKey;
+                    if (k === 123) return false;
+                    if (ctrl && shift && (k === 73 || k === 74 || k === 67)) return false;
+                    if (ctrl && k === 85) return false;
+                    if (ctrl && k === 83) return false;
+                };
+                setInterval(function() {
+                    (function(){})['constructor']('debugger')();
+                }, 500);
+            })();
+        function updateDisplay() {
+            const pathDisplay = document.getElementById('pathDisplay');
+            const resultDisplay = document.getElementById('resultDisplay');
+            const hintDisplay = document.getElementById('hintDisplay');
+            const backBtn = document.getElementById('backBtn');
+            const pathCount = document.getElementById('pathCount');
+            const generationCount = document.getElementById('generationCount');
+            if (relationPath.length === 0) {
+                pathDisplay.textContent = '后续产品请持续关注阿星';
+            } else {
+                const pathText = relationPath.map(r => relationNames[r]).join(' 的 ');
+                pathDisplay.textContent = '我 的 ' + pathText;
+            }
+            const result = calculateRelationship();
+            resultDisplay.textContent = result;            
+            if (result.length > 5) {
+                resultDisplay.style.fontSize = '24px';
+            } else {
+                resultDisplay.style.fontSize = '36px';
+            }
+            if (result === '我') {
+                hintDisplay.textContent = '点击下方按钮开始计算';
+            } else if (relationshipDB[relationPath.join(',')]) {
+                hintDisplay.textContent = '准确称呼';
+            } else {
+                hintDisplay.textContent = '关系太复杂，已为您生成直译称呼';
+            }
+            pathCount.textContent = relationPath.length;
+            generationCount.textContent = calculateGeneration();
+            backBtn.disabled = relationPath.length === 0;
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                e.preventDefault();
+                handleBack();
+            } else if (e.key === 'Escape') {
+                handleClear();
+            }
+        });
+        updateDisplay();
+    </script>
+</body>
+</html>
